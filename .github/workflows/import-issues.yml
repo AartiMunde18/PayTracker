@@ -15,4 +15,4 @@ jobs:
           file-path: 'data/paytrack_github_issues_import.csv'
           file-format: 'csv'
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          dry-run: true
+          dry-run: false
