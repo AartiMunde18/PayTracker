@@ -1,0 +1,182 @@
+Title,Body,Milestone,Labels
+"[Setup] Initialiser le dépôt GitHub, CI/CD de base et environnement Docker Compose","## Objectif
+Mettre en place l'infrastructure locale et les règles de collaboration du dépôt.
+
+## Tâches
+- Créer le dépôt GitHub avec protection de la branche `main` (PR requise avant merge).
+- Ajouter un modèle de Pull Request (`.github/pull_request_template.md`).
+- Configurer `docker-compose.yml` avec PostgreSQL et Redis.
+
+## Critères d'acceptation (Done when)
+- La branche `main` est protégée.
+- `docker compose up` démarre PostgreSQL et Redis sans erreur.",Week 1: Understand brief and set up,"setup, infrastructure, week-1, priority:high"
+[Analysis] Analyser le PDF PayTrack et définir les 5 critères d'acceptation,"## Objectif
+Extraire les exigences clés du cahier des charges PayTrack et documenter la règle spécifique du client.
+
+## Tâches
+- Lire le PDF des exigences PayTrack.
+- Rédiger la liste des 5 critères d'acceptation dans le Team Workspace.
+- Confirmer la règle supplémentaire du client (Ananya Keshwala - Thornbury Sallow Infrastructure : obligation de numéro de PO/Tender valide et contrôle du plafond budgétaire avant émission) et l'ajouter en tant que User Story sur le tableau.
+
+## Critères d'acceptation (Done when)
+- Les 5 critères d'acceptation sont publiés dans le workspace.
+- La règle client PO/Tender est ajoutée au board.",Week 1: Understand brief and set up,"documentation, analysis, client-rule, week-1"
+[Docs] Rédiger le brouillon du document de conception technique (/docs/design.md),"## Objectif
+Rédiger le document d'architecture et de spécifications techniques prêt pour la revue du mentor d'ici le 15 Nov.
+
+## Tâches
+- Créer `/docs/design.md` avec les sections : Architecture, Data Model, API Contract, Tax Rule, Numbering Rule, Risks.
+- Compléter en priorité la matrice des permissions avec les 5 rôles issus de `FR-1.01` face à chaque action.
+- Détailler la règle d'arrondi (`Rounding rule`) et la règle de numérotation (`Numbering rule`) de manière claire et applicable à la main.
+
+## Critères d'acceptation (Done when)
+- Toutes les sections requises sont présentes dans `/docs/design.md`.
+- La matrice des permissions croise les 5 rôles et toutes les actions.
+- Les règles d'arrondi et de numérotation sont vérifiables manuellement.
+- Prêt pour la revue mentor le 15 Nov.",Week 1: Understand brief and set up,"documentation, architecture, week-1, priority:high"
+[DB/CI] Créer la migration Flyway V1 multi-tenant et la pipeline CI Testcontainers,"## Objectif
+Structurer la base de données pour l'isolation des locataires (tenants) et automatiser les tests d'intégration.
+
+## Tâches
+- Ajouter la migration Flyway `V1` incluant obligatoirement `organisation_id` sur chaque table.
+- Configurer GitHub Actions pour exécuter les tests d'intégration avec Testcontainers (PostgreSQL).
+
+## Critères d'acceptation (Done when)
+- La migration V1 s'applique proprement.
+- Chaque table possède une colonne `organisation_id`.
+- La CI passe avec Testcontainers PostgreSQL.",Week 2: Walking skeleton and core models,"backend, database, ci-cd, week-2, priority:high"
+[Security] Implémenter l'authentification Spring Security et l'isolation par organisation,"## Objectif
+Mettre en place le Walking Skeleton sécurisé avec hachage des mots de passe et isolation stricte des données par organisation.
+
+## Tâches
+- Ajouter la dépendance Spring Security au projet Spring Boot.
+- Créer un script de seed Flyway avec une organisation et un utilisateur de test (mot de passe haché avec BCrypt).
+- Filtrer toutes les requêtes par `organisation_id` de l'utilisateur authentifié.
+- Tester la connexion en local avec `curl` ou Bruno.
+
+## Critères d'acceptation (Done when)
+- La connexion avec l'utilisateur seedé réussit.
+- Un utilisateur de l'organisation A ne voit aucune donnée de l'organisation B.
+- Les mots de passe sont stockés sous forme de hash en base de données.",Week 2: Walking skeleton and core models,"backend, security, multi-tenancy, week-2, priority:high"
+[Feature] Développer le CRUD Client avec validation du format GSTIN,"## Objectif
+Gérer les clients de chaque organisation avec validation fiscale et adresses.
+
+## Tâches
+- Créer les endpoints CRUD pour l'entité `Customer` (incluant adresses de facturation et de livraison).
+- Implémenter la validation stricte du format GSTIN.
+- Écrire un test d'intégration pour chaque endpoint protégé.
+
+## Critères d'acceptation (Done when)
+- CRUD complet fonctionnel et isolé par `organisation_id`.
+- Les GSTIN invalides sont rejetés avec une erreur 400.
+- Chaque endpoint protégé est couvert par un test automatisé.",Week 2: Walking skeleton and core models,"backend, feature, testing, week-2"
+[Deploy] Déployer le Walking Skeleton sur Render Staging (échéance 17 Nov),"## Objectif
+Mettre en ligne l'environnement de staging pour valider l'authentification et la santé de l'application.
+
+## Tâches
+- Configurer le service web et la base PostgreSQL sur Render.
+- Déployer la branche principale d'ici le 17 Nov.
+- Vérifier que `/actuator/health` répond `UP` et tester le login sur l'URL de staging.
+
+## Critères d'acceptation (Done when)
+- L'endpoint `/actuator/health` répond 200 OK sur Render.
+- Le login avec l'utilisateur seedé fonctionne sur l'URL de staging.",Week 2: Walking skeleton and core models,"deployment, staging, week-2, priority:high"
+[Feature] Implémenter les brouillons de factures et le calcul des totaux (BigDecimal),"## Objectif
+Permettre la création de factures en brouillon avec lignes d'articles et calculs exacts côté serveur.
+
+## Tâches
+- Créer les modèles et endpoints pour les factures (`Invoice`) et lignes de facture (`InvoiceLineItem`).
+- Calculer tous les sous-totaux, taxes et totaux côté serveur avec `BigDecimal` en appliquant strictement la règle d'arrondi documentée dans `/docs/design.md`.
+
+## Critères d'acceptation (Done when)
+- Les totaux sont calculés exclusivement côté serveur via `BigDecimal`.
+- L'arrondi est conforme à la spécification technique.","Week 3: Invoices, tax and numbering","backend, feature, billing, week-3, priority:high"
+[Feature] Implémenter le moteur de calcul des taxes (CGST/SGST vs IGST),"## Objectif
+Appliquer automatiquement les règles de TVA indienne (GST) selon l'État du fournisseur et du client.
+
+## Tâches
+- Implémenter le calcul `CGST` + `SGST` pour les transactions intra-État (même État).
+- Implémenter le calcul `IGST` pour les transactions inter-États (États différents).
+- Rédiger des tests unitaires/intégration vérifiant 3 factures calculées à la main.
+
+## Critères d'acceptation (Done when)
+- CGST/SGST et IGST sont correctement appliqués selon l'adresse.
+- Les tests passent sur les 3 cas de factures vérifiés manuellement.","Week 3: Invoices, tax and numbering","backend, feature, tax, testing, week-3, priority:high"
+[Feature] Implémenter la numérotation séquentielle verrouillée par exercice financier,"## Objectif
+Garantir des numéros de facture consécutifs sans doublons ni trous en environnement concurrent.
+
+## Tâches
+- Créer la gestion des séries de numérotation par exercice financier (`Financial Year`).
+- Utiliser un verrou pessimiste (`SELECT ... FOR UPDATE`) sur la ligne de série lors de l'émission.
+- Écrire un test de concurrence simulant 20 émissions parallèles.
+
+## Critères d'acceptation (Done when)
+- 20 émissions simultanées génèrent exactement 20 numéros consécutifs sans erreur de concurrence.","Week 3: Invoices, tax and numbering","backend, feature, concurrency, testing, week-3, priority:high"
+[Client Rule] Implémenter le contrôle des bons de commande (PO/Tender) avant émission,"## Contexte Client (Ananya Keshwala - Thornbury Sallow Infrastructure)
+Toute facture envoyée à un ministère/département gouvernemental doit citer un numéro d'appel d'offres (Tender) ou de bon de commande (PO). L'émission doit être bloquée si le PO n'existe pas ou si le total de la facture dépasse le solde restant du PO.
+
+## Tâches
+- Créer l'entité/référentiel `PurchaseOrder` (numéro PO/Tender, montant total, solde restant).
+- Ajouter la validation bloquante lors du passage de la facture au statut `ISSUED` : vérifier l'existence du PO et que `invoice.total <= po.remaining_value`.
+- Déduire le montant de la facture du solde restant du PO à l'émission.
+- Écrire les tests couvrant le rejet en cas de PO inexistant ou de dépassement de budget.
+
+## Critères d'acceptation (Done when)
+- Impossible d'émettre une facture gouvernementale sans PO valide.
+- Impossible d'émettre une facture dépassant le montant restant du PO.","Week 3: Invoices, tax and numbering","backend, feature, client-rule, week-3, priority:critical"
+"[Feature] Gérer l'immuabilité des factures émises, les avoirs (Credit Notes) et la génération PDF","## Objectif
+Finaliser le cycle de vie de la facture après émission et fournir un document téléchargeable sécurisé.
+
+## Tâches
+- Rendre les factures au statut `ISSUED` strictement immuables (aucune modification/suppression autorisée).
+- Implémenter la création d'avoirs (`Credit Note`) liés à une facture émise.
+- Générer le PDF de la facture et fournir un lien de téléchargement signé (Signed URL).
+
+## Critères d'acceptation (Done when)
+- Toute tentative de modification d'une facture émise est rejetée.
+- Un avoir peut être généré et lié à une facture existante.
+- Le PDF est généré et accessible via un lien signé valide.","Week 3: Invoices, tax and numbering","backend, feature, pdf, billing, week-3"
+[CR-1] Estimer l'impact et implémenter les factures mensuelles récurrentes planifiées,"## Objectif
+Répondre à la demande de changement CR-1 concernant la facturation récurrente.
+
+## Tâches
+- Rédiger l'estimation d'impact de `CR-1` dans les release notes.
+- Créer le modèle de facture récurrente mensuelle (`RecurringInvoiceTemplate`).
+- Implémenter le planificateur (Scheduler) qui génère et émet automatiquement la facture le jour du mois choisi.
+
+## Critères d'acceptation (Done when)
+- L'estimation d'impact CR-1 figure dans les release notes.
+- Le modèle récurrent émet automatiquement les factures à la date programmée.","Week 4: Change request, release and submission","backend, feature, change-request, week-4, priority:high"
+[QA/Release] Exécuter les tests finaux d'isolation/réconciliation et déployer la v1.0.0,"## Objectif
+Valider la qualité globale de l'application avant la mise en production officielle.
+
+## Tâches
+- Exécuter une suite complète de tests d'isolation multi-tenant.
+- Exécuter les tests de réconciliation financière (factures, taxes, avoirs, soldes PO).
+- Créer le tag Git `v1.0.0` avec une pipeline CI 100% verte.
+- Déployer la version `v1.0.0` en production.
+
+## Critères d'acceptation (Done when)
+- Tous les tests d'isolation et de réconciliation passent.
+- Le tag `v1.0.0` est publié et déployé en production.","Week 4: Change request, release and submission","testing, qa, release, production, week-4, priority:high"
+[Submission] Préparer les livrables finaux et soumettre sur LogicVeda (échéance 7 Dec),"## Objectif
+Finaliser toute la documentation et les vidéos pour la soumission officielle sur LogicVeda.
+
+## Tâches
+- Enregistrer la vidéo de démonstration (Demo Video).
+- Enregistrer la vidéo de retour d'expérience (Feedback Video).
+- Rédiger le rapport final.
+- Soumettre le code source, le lien de déploiement live et le package de release sur LogicVeda avant le 7 Dec.
+
+## Critères d'acceptation (Done when)
+- Tous les livrables (vidéos, rapport, code, lien live) sont soumis sur LogicVeda avant le 7 Dec.","Week 4: Change request, release and submission","documentation, submission, deliverables, week-4, priority:high"
+[Presentation] Répéter la présentation en direct et préparer les questions 'What-If',"## Objectif
+Préparer l'équipe pour la soutenance orale en direct.
+
+## Tâches
+- Répéter la présentation afin que chaque membre explique : son module technique, sa responsabilité sur la plateforme, et le fonctionnement de la règle client (PO/Tender).
+- Préparer et tester la réponse à une question de scénario imprévu (`what-if question`).
+
+## Critères d'acceptation (Done when)
+- Chaque membre maîtrise sa partie et la règle client.
+- L'équipe est prête à répondre aux questions 'what-if'.","Week 4: Change request, release and submission","presentation, team, week-4"
