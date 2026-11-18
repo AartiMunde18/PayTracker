@@ -1,4 +1,4 @@
-package com.cyxlab.SpringSecurityAuth;
+package com.cyxlab;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
