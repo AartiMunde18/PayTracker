@@ -39,7 +39,7 @@ jobs:
 
       - name: Stop Database
         if: always()
-        run: docker-compose stop db
+        run: docker compose stop db
 
   # --- STEP 2 : CODE QUALITY ---
   code_quality_job:
