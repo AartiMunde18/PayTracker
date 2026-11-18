@@ -24,22 +24,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Start Database for Testing
-        shell: powershell
-        run: |
-          docker-compose up -d db
-          Start-Sleep -s 10
-
+      # Testcontainers démarre sa propre base PostgreSQL : pas besoin de docker compose ici.
       - name: Exécution des tests
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/paytrack
-          SPRING_DATASOURCE_USERNAME: user
-          SPRING_DATASOURCE_PASSWORD: password
         run: ./mvnw test -Dspring.profiles.active=test
-
-      - name: Stop Database
-        if: always()
-        run: docker compose stop db
 
   # --- STEP 2 : CODE QUALITY ---
   code_quality_job:
@@ -79,15 +66,15 @@ jobs:
         continue-on-error: true
 
       - name: Verify Security Compliance
-        shell: powershell
+        shell: bash
         run: |
-          Write-Host "Vérification des résultats OWASP..."
-          if (Test-Path "target/dependency-check-report.html") {
-            Write-Host "Rapport OWASP généré avec succès"
-          } else {
-            Write-Host "Rapport OWASP non trouvé"
+          echo "Vérification des résultats OWASP..."
+          if [ -f "target/dependency-check-report.html" ]; then
+            echo "Rapport OWASP généré avec succès"
+          else
+            echo "Rapport OWASP non trouvé"
             exit 1
-          }
+          fi
 
   # --- STEP 4 : PACKAGING ---
   package_job:
@@ -124,64 +111,62 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Start Canary Stack
-        shell: powershell
+        shell: bash
         run: |
           # Nettoyage radical
-          $canary = docker ps -aq -f name=paytrack-canary
-          if ($canary) { docker rm -f paytrack-canary }
+          canary=$(docker ps -aq -f name=paytrack-canary)
+          if [ -n "$canary" ]; then docker rm -f paytrack-canary; fi
 
           # Création du réseau si nécessaire
-          if (!(docker network ls --filter name=^paytrack_net$ -q)) {
-              Write-Host "Création du réseau paytrack_net..."
-              docker network create paytrack_net
-          }
+          if ! docker network ls --filter name=^paytrack_net$ -q | grep -q .; then
+            echo "Création du réseau paytrack_net..."
+            docker network create paytrack_net
+          fi
 
-          # Lancement de l'infrastructure (DB et éventuellement Redis)
+          # Lancement de l'infrastructure (DB)
           docker compose up -d db
-          Write-Host "Attente du démarrage des services (20s)..."
-          Start-Sleep -s 20
+          echo "Attente du démarrage des services (20s)..."
+          sleep 20
 
           # Lancement du conteneur Canary
-          docker run -d --name paytrack-canary `
-            --network paytrack_net `
-            -e SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/paytrack `
-            -e SPRING_DATASOURCE_USERNAME=user `
-            -e SPRING_DATASOURCE_PASSWORD=password `
-            -e SPRING_PROFILES_ACTIVE=canary `
+          docker run -d --name paytrack-canary \
+            --network paytrack_net \
+            -e SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/paytrack \
+            -e SPRING_DATASOURCE_USERNAME=user \
+            -e SPRING_DATASOURCE_PASSWORD=password \
+            -e SPRING_PROFILES_ACTIVE=canary \
             -p 8081:8080 paytrack_app:latest
 
       - name: Health Check
-        shell: powershell
+        shell: bash
         run: |
-          Write-Host "Vérification de l'API sur le port 8081..."
-          Start-Sleep -s 15
-          try {
-              $response = Invoke-RestMethod -Uri "http://localhost:8081/actuator/health" -Method Get
-              Write-Host "L'API est stable ! Status: $($response.status)"
-          } catch {
-              Write-Host "--- ÉCHEC DU HEALTH CHECK : Logs de l'application ---"
-              docker logs paytrack-canary
-              exit 1
-          }
+          echo "Vérification de l'API sur le port 8081..."
+          sleep 15
+          if curl -sf http://localhost:8081/actuator/health; then
+            echo "L'API est stable !"
+          else
+            echo "--- ÉCHEC DU HEALTH CHECK : Logs de l'application ---"
+            docker logs paytrack-canary
+            exit 1
+          fi
 
       - name: Test API Endpoints
-        shell: powershell
+        shell: bash
         run: |
-          Write-Host "Test des endpoints API..."
-          try {
-              $health = Invoke-RestMethod -Uri "http://localhost:8081/actuator/health" -Method Get
-              Write-Host "Health endpoint OK: $($health.status)"
-          } catch {
-              Write-Host "API endpoint test failed"
-              exit 1
-          }
+          echo "Test des endpoints API..."
+          if curl -sf http://localhost:8081/actuator/health; then
+            echo "Health endpoint OK"
+          else
+            echo "API endpoint test failed"
+            exit 1
+          fi
 
       - name: Cleanup Canary
         if: always()
-        shell: powershell
+        shell: bash
         run: |
-          Write-Host "Nettoyage du test Canary..."
-          if (docker ps -aq -f name=paytrack-canary) { docker rm -f paytrack-canary }
+          echo "Nettoyage du test Canary..."
+          if [ -n "$(docker ps -aq -f name=paytrack-canary)" ]; then docker rm -f paytrack-canary; fi
 
   # --- STEP 6 : DEPLOYMENT IN PRODUCTION ---
   deploy_prod_job:
@@ -193,23 +178,21 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Stop existing containers
-        shell: powershell
+        shell: bash
         run: |
-          docker compose down
-          if ($LASTEXITCODE -ne 0) { Write-Host "No containers to stop" }
+          docker compose down || echo "No containers to stop"
 
       - name: Deploy Full Stack
         run: docker compose up -d --build
 
       - name: Verify Production Deployment
-        shell: powershell
+        shell: bash
         run: |
-          Write-Host "Waiting for services to be ready..."
-          Start-Sleep -s 20
-          try {
-              $response = Invoke-RestMethod -Uri "http://localhost:8080/actuator/health" -Method Get
-              Write-Host "Production deployment successful! Status: $($response.status)"
-          } catch {
-              Write-Host "Production deployment verification failed"
-              exit 1
-          }
+          echo "Waiting for services to be ready..."
+          sleep 20
+          if curl -sf http://localhost:8080/actuator/health; then
+            echo "Production deployment successful!"
+          else
+            echo "Production deployment verification failed"
+            exit 1
+          fi
