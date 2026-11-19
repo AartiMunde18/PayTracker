@@ -1,4 +1,4 @@
-package com.cyxlab.model;
+package com.paytrack.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

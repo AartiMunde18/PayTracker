@@ -1,4 +1,4 @@
-package com.cyxlab;
+package com.paytrack;
 
 
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,8 +12,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 public abstract class AbstractIntegrationTest {
 
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+    private static final PostgreSQLContainer<?> POSTGRE_SQL_CONTAINER = new PostgreSQLContainer<>("postgres:16-alpine");
+	@Container
+    static PostgreSQLContainer<?> postgres = POSTGRE_SQL_CONTAINER
             .withDatabaseName("paytrack_test")
             .withUsername("test")
             .withPassword("test");

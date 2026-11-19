@@ -1,4 +1,4 @@
-package com.cyxlab.configuration;
+package com.paytrack.configuration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,8 +11,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.cyxlab.model.DBUser;
-import com.cyxlab.repository.DBUserRepository;
+import com.paytrack.model.DBUser;
+import com.paytrack.repository.DBUserRepository;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
